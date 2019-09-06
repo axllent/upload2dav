@@ -59,7 +59,7 @@ func main() {
 		fmt.Println(fmt.Sprintf("Version: %s", version))
 		latest, _, _, err := gitrel.Latest("axllent/upload2dav", "upload2dav")
 		if err == nil && latest != version {
-			fmt.Println(fmt.Sprintf("Update available: %s\nRun `%s --update` to update.", latest, os.Args[0]))
+			fmt.Println(fmt.Sprintf("Update available: %s\nRun `%s -u` to update.", latest, os.Args[0]))
 		}
 		os.Exit(0)
 	}
