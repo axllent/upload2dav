@@ -1,6 +1,6 @@
 # Upload2dav
 
-A simple golang utility to upload files to a webdav server such as Netxcloud.
+A simple golang utility to upload files to a webdav server such as Nextcloud.
 
 
 ## Usage options
@@ -21,4 +21,6 @@ Options:
 
 ## Installation
 
-You can use of the pre-built binaries (see releases), or if you prefer to build it from source `go get github.com/axllent/upload2dav`
+You can use of the pre-built binaries (see releases).
+
+If you prefer to build it from source `go get github.com/axllent/upload2dav`
