@@ -1,5 +1,7 @@
 # Upload2dav
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/axllent/upload2dav)](https://goreportcard.com/report/github.com/axllent/upload2dav)
+
 A simple golang utility to upload files to a webdav server such as Nextcloud.
 
 
