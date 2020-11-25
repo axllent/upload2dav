@@ -7,7 +7,7 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/axllent/gitrel"
+	"github.com/axllent/ghru"
 	"github.com/spf13/pflag"
 	"github.com/studio-b12/gowebdav"
 )
@@ -57,15 +57,15 @@ func main() {
 
 	if showVersion {
 		fmt.Println(fmt.Sprintf("Version: %s", version))
-		latest, _, _, err := gitrel.Latest("axllent/upload2dav", "upload2dav")
-		if err == nil && latest != version {
-			fmt.Println(fmt.Sprintf("Update available: %s\nRun `%s --update` to update.", latest, os.Args[0]))
+		latest, _, _, err := ghru.Latest("axllent/upload2dav", "upload2dav")
+		if err == nil && ghru.GreaterThan(latest, version) {
+			fmt.Println(fmt.Sprintf("Update available: %s\nRun `%s -u` to update.", latest, os.Args[0]))
 		}
 		os.Exit(0)
 	}
 
 	if update {
-		rel, err := gitrel.Update("axllent/upload2dav", "upload2dav", version)
+		rel, err := ghru.Update("axllent/upload2dav", "upload2dav", version)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
