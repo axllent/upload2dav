@@ -20,3 +20,4 @@ release:
 	$(call build,linux,arm)
 	$(call build,linux,arm64)
 	$(call build,darwin,amd64)
+	$(call build,darwin,arm64)
