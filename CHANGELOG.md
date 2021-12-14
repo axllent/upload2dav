@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.2]
+
+- Use WriteStream rather than reading the file into memory
+- Update go modules
+
 ## [1.0.1]
 
 - Use ghru for internal updating
