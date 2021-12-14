@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -125,10 +124,11 @@ func Upload(file, dir string) error {
 		return fmt.Errorf("%s is not a file", file)
 	}
 
-	bytes, err := ioutil.ReadFile(file)
+	wfile, err := os.Open(file)
 	if err != nil {
 		return err
 	}
+	defer wfile.Close()
 
 	outFilename := filepath.Base(file)
 
@@ -138,8 +138,7 @@ func Upload(file, dir string) error {
 		fmt.Printf("Uploading %s to %s ... ", file, uploadName)
 	}
 
-	err = client.Write(uploadName, bytes, 0664)
-	if err != nil {
+	if err := client.WriteStream(uploadName, wfile, 0664); err != nil {
 		return err
 	}
 
