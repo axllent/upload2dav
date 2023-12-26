@@ -2,7 +2,7 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/axllent/upload2dav)](https://goreportcard.com/report/github.com/axllent/upload2dav)
 
-A simple utility written in Go to upload files to a webdav server such as Nextcloud.
+A simple utility written in Go to upload files to a WebDAV server such as Nextcloud.
 
 
 ## Usage options
@@ -23,6 +23,11 @@ Options:
 
 ## Installation
 
-You can use of the pre-built binaries (see releases).
+You can use of the pre-built binaries (see [releases](https://github.com/axllent/upload2dav/releases)).
 
-If you prefer to build it from source `go get github.com/axllent/upload2dav`
+If you prefer to build it from source `go install github.com/axllent/upload2dav`
+
+
+## Configuration notes
+
+When adding the WebDAV server, please ensure you include the WebDAV path (eg: `https://example.com/remote.php/webdav/`).
