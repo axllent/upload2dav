@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.5]
+
+- Update Go modules
+
+
 ## [1.0.4]
 
 - Update core modules
