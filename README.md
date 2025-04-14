@@ -25,7 +25,7 @@ Options:
 
 You can use of the pre-built binaries (see [releases](https://github.com/axllent/upload2dav/releases)).
 
-If you prefer to build it from source `go install github.com/axllent/upload2dav`
+If you prefer to build it from source `go install github.com/axllent/upload2dav@latest`
 
 
 ## Configuration notes
