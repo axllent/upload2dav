@@ -1,24 +1,29 @@
 # Changelog
 
+## [1.0.6]
+
+- Update Go dependencies
+
+
 ## [1.0.5]
 
-- Update Go modules
+- Update Go dependencies
 
 
 ## [1.0.4]
 
-- Update core modules
+- Update Go dependencies
 
 
 ## [1.0.3]
 
-- Update core modules
+- Update Go dependencies
 
 
 ## [1.0.2]
 
 - Use WriteStream rather than reading the file into memory
-- Update go modules
+- Update Go dependencies
 
 
 ## [1.0.1]
