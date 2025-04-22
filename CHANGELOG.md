@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.7]
+
+- Bump `golang.org/x/net` version to address CVE-2025-22870 & CVE-2025-22872
+
+
 ## [1.0.6]
 
 - Update Go dependencies
