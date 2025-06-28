@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"runtime"
 
@@ -19,8 +18,8 @@ type Config struct {
 }
 
 // ReadConfig returns an error if file does not exist
-func ReadConfig(file string) error {
-	configJSON, err := ioutil.ReadFile(file)
+func readConfig(file string) error {
+	configJSON, err := os.ReadFile(file)
 	if err != nil {
 		return err
 	}
@@ -35,14 +34,18 @@ func ReadConfig(file string) error {
 }
 
 // WriteConfig writes a config file
-func WriteConfig(file string) error {
+func writeConfig(file string) error {
 	config = Config{}
 
 	fmt.Printf("Webdav server: ")
-	fmt.Scanln(&config.ServerAddress)
+	if _, err := fmt.Scanln(&config.ServerAddress); err != nil {
+		return err
+	}
 
 	fmt.Printf("Username: ")
-	fmt.Scanln(&config.Username)
+	if _, err := fmt.Scanln(&config.Username); err != nil {
+		return err
+	}
 
 	fmt.Printf("Password (not displayed): ")
 	pwd, err := gopass.GetPasswd()
@@ -52,18 +55,20 @@ func WriteConfig(file string) error {
 	config.Password = string(pwd)
 
 	fmt.Printf("Default upload directory: ")
-	fmt.Scanln(&config.UploadDir)
+	if _, err := fmt.Scanln(&config.UploadDir); err != nil {
+		return err
+	}
 
 	configJSON, err := json.MarshalIndent(config, "", "\t")
 	if err != nil {
 		return err
 	}
 
-	return ioutil.WriteFile(file, configJSON, 0600)
+	return os.WriteFile(file, configJSON, 0600)
 }
 
 // Home returns the user's home directory
-func Home() string {
+func home() string {
 	if runtime.GOOS == "windows" {
 		home := os.Getenv("HOMEDRIVE") + os.Getenv("HOMEPATH")
 		if home == "" {

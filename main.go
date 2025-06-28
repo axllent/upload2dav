@@ -1,3 +1,4 @@
+// Package main is the application entry point for upload2dav
 package main
 
 import (
@@ -6,7 +7,7 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/axllent/ghru"
+	"github.com/axllent/ghru/v2"
 	"github.com/spf13/pflag"
 	"github.com/studio-b12/gowebdav"
 )
@@ -19,10 +20,17 @@ var (
 )
 
 func main() {
-	var showHelp, writeConfig, showVersion, update bool
+	ghruConf := ghru.Config{
+		Repo:           "axllent/upload2dav",
+		ArchiveName:    "upload2dav-{{.OS}}-{{.Arch}}",
+		BinaryName:     "upload2dav",
+		CurrentVersion: version,
+	}
+
+	var showHelp, cmdWriteConfig, showVersion, update bool
 	var configFile, uploadPath string
 
-	defaultConfig := Home() + "/.config/upload2dav.json"
+	defaultConfig := home() + "/.config/upload2dav.json"
 
 	flag := pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
 
@@ -37,14 +45,17 @@ func main() {
 
 	flag.StringVarP(&uploadPath, "dir", "d", "", "Alternative upload directory")
 	flag.StringVarP(&configFile, "conf", "c", defaultConfig, "Specify config file")
-	flag.BoolVarP(&writeConfig, "write-config", "w", false, "Write config")
+	flag.BoolVarP(&cmdWriteConfig, "write-config", "w", false, "Write config")
 	flag.BoolVarP(&quiet, "quiet", "q", false, "Quiet (do not show upload progress)")
 	flag.BoolVarP(&showVersion, "version", "v", false, "Show version")
 	flag.BoolVarP(&update, "update", "u", false, "Update to latest version")
 	flag.BoolVarP(&showHelp, "help", "h", false, "Show help")
 
 	// parse args excluding os.Args[0]
-	flag.Parse(os.Args[1:])
+	if err := flag.Parse(os.Args[1:]); err != nil {
+		fmt.Printf("Error parsing flags: %s\n", err)
+		os.Exit(1)
+	}
 
 	// parse arguments
 	files := flag.Args()
@@ -55,26 +66,42 @@ func main() {
 	}
 
 	if showVersion {
-		fmt.Println(fmt.Sprintf("Version: %s", version))
-		latest, _, _, err := ghru.Latest("axllent/upload2dav", "upload2dav")
-		if err == nil && ghru.GreaterThan(latest, version) {
-			fmt.Println(fmt.Sprintf("Update available: %s\nRun `%s -u` to update.", latest, os.Args[0]))
+		fmt.Printf("Version: %s\n", version)
+
+		release, err := ghruConf.Latest()
+		if err != nil {
+			fmt.Println(err.Error())
+			os.Exit(1)
 		}
+
+		// The latest version is the same version
+		if release.Tag == version {
+			os.Exit(0)
+		}
+
+		// A newer release is available
+		fmt.Printf(
+			"Update available: %s\nRun `%s -u` to update (requires read/write access to install directory).\n",
+			release.Tag,
+			os.Args[0],
+		)
 		os.Exit(0)
 	}
 
 	if update {
-		rel, err := ghru.Update("axllent/upload2dav", "upload2dav", version)
+		// Update the app
+		rel, err := ghruConf.SelfUpdate()
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println(err.Error())
 			os.Exit(1)
 		}
-		fmt.Println(fmt.Sprintf("Updated %s to version %s", os.Args[0], rel))
+
+		fmt.Printf("Updated %s to version %s\n", os.Args[0], rel.Tag)
 		os.Exit(0)
 	}
 
-	if writeConfig {
-		if err := WriteConfig(configFile); err != nil {
+	if cmdWriteConfig {
+		if err := writeConfig(configFile); err != nil {
 			fmt.Printf("Error: %s\n\n", err)
 			os.Exit(1)
 		}
@@ -83,7 +110,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	if err := ReadConfig(configFile); err != nil {
+	if err := readConfig(configFile); err != nil {
 		fmt.Printf("Error: %s\n", err)
 		fmt.Printf("\nUse -c to specify a configuration file, or -w to create a new one\n\n")
 		os.Exit(1)
@@ -100,20 +127,20 @@ func main() {
 
 	client = gowebdav.NewClient(config.ServerAddress, config.Username, config.Password)
 
-	if err := CheckDirExists(config.UploadDir); err != nil {
+	if err := checkDirExists(config.UploadDir); err != nil {
 		fmt.Printf("Error: %s\n", err)
 		return
 	}
 
 	for _, file := range files {
-		if err := Upload(file, config.UploadDir); err != nil {
+		if err := upload(file); err != nil {
 			fmt.Printf("Error: %s\n", err)
 		}
 	}
 }
 
 // Upload sends a local file to the webdav server
-func Upload(file, dir string) error {
+func upload(file string) error {
 	info, err := os.Stat(file)
 
 	if err != nil {
@@ -124,11 +151,11 @@ func Upload(file, dir string) error {
 		return fmt.Errorf("%s is not a file", file)
 	}
 
-	wfile, err := os.Open(file)
+	wFile, err := os.Open(file)
 	if err != nil {
 		return err
 	}
-	defer wfile.Close()
+	defer func() { _ = wFile.Close() }()
 
 	outFilename := filepath.Base(file)
 
@@ -138,7 +165,7 @@ func Upload(file, dir string) error {
 		fmt.Printf("Uploading %s to %s ... ", file, uploadName)
 	}
 
-	if err := client.WriteStream(uploadName, wfile, 0664); err != nil {
+	if err := client.WriteStream(uploadName, wFile, 0664); err != nil {
 		return err
 	}
 
@@ -150,7 +177,7 @@ func Upload(file, dir string) error {
 }
 
 // CheckDirExists checked first is a directory exists
-func CheckDirExists(dir string) error {
+func checkDirExists(dir string) error {
 	if _, err := client.ReadDir(dir); err != nil {
 		if err := client.MkdirAll(dir, 0644); err != nil {
 			return err
