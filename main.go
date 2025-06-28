@@ -1,3 +1,4 @@
+// Package main is the application entry point for upload2dav
 package main
 
 import (
@@ -26,10 +27,10 @@ func main() {
 		CurrentVersion: version,
 	}
 
-	var showHelp, writeConfig, showVersion, update bool
+	var showHelp, cmdWriteConfig, showVersion, update bool
 	var configFile, uploadPath string
 
-	defaultConfig := Home() + "/.config/upload2dav.json"
+	defaultConfig := home() + "/.config/upload2dav.json"
 
 	flag := pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
 
@@ -44,14 +45,17 @@ func main() {
 
 	flag.StringVarP(&uploadPath, "dir", "d", "", "Alternative upload directory")
 	flag.StringVarP(&configFile, "conf", "c", defaultConfig, "Specify config file")
-	flag.BoolVarP(&writeConfig, "write-config", "w", false, "Write config")
+	flag.BoolVarP(&cmdWriteConfig, "write-config", "w", false, "Write config")
 	flag.BoolVarP(&quiet, "quiet", "q", false, "Quiet (do not show upload progress)")
 	flag.BoolVarP(&showVersion, "version", "v", false, "Show version")
 	flag.BoolVarP(&update, "update", "u", false, "Update to latest version")
 	flag.BoolVarP(&showHelp, "help", "h", false, "Show help")
 
 	// parse args excluding os.Args[0]
-	flag.Parse(os.Args[1:])
+	if err := flag.Parse(os.Args[1:]); err != nil {
+		fmt.Printf("Error parsing flags: %s\n", err)
+		os.Exit(1)
+	}
 
 	// parse arguments
 	files := flag.Args()
@@ -96,8 +100,8 @@ func main() {
 		os.Exit(0)
 	}
 
-	if writeConfig {
-		if err := WriteConfig(configFile); err != nil {
+	if cmdWriteConfig {
+		if err := writeConfig(configFile); err != nil {
 			fmt.Printf("Error: %s\n\n", err)
 			os.Exit(1)
 		}
@@ -106,7 +110,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	if err := ReadConfig(configFile); err != nil {
+	if err := readConfig(configFile); err != nil {
 		fmt.Printf("Error: %s\n", err)
 		fmt.Printf("\nUse -c to specify a configuration file, or -w to create a new one\n\n")
 		os.Exit(1)
@@ -123,20 +127,20 @@ func main() {
 
 	client = gowebdav.NewClient(config.ServerAddress, config.Username, config.Password)
 
-	if err := CheckDirExists(config.UploadDir); err != nil {
+	if err := checkDirExists(config.UploadDir); err != nil {
 		fmt.Printf("Error: %s\n", err)
 		return
 	}
 
 	for _, file := range files {
-		if err := Upload(file, config.UploadDir); err != nil {
+		if err := upload(file); err != nil {
 			fmt.Printf("Error: %s\n", err)
 		}
 	}
 }
 
 // Upload sends a local file to the webdav server
-func Upload(file, dir string) error {
+func upload(file string) error {
 	info, err := os.Stat(file)
 
 	if err != nil {
@@ -147,11 +151,11 @@ func Upload(file, dir string) error {
 		return fmt.Errorf("%s is not a file", file)
 	}
 
-	wfile, err := os.Open(file)
+	wFile, err := os.Open(file)
 	if err != nil {
 		return err
 	}
-	defer wfile.Close()
+	defer func() { _ = wFile.Close() }()
 
 	outFilename := filepath.Base(file)
 
@@ -161,7 +165,7 @@ func Upload(file, dir string) error {
 		fmt.Printf("Uploading %s to %s ... ", file, uploadName)
 	}
 
-	if err := client.WriteStream(uploadName, wfile, 0664); err != nil {
+	if err := client.WriteStream(uploadName, wFile, 0664); err != nil {
 		return err
 	}
 
@@ -173,7 +177,7 @@ func Upload(file, dir string) error {
 }
 
 // CheckDirExists checked first is a directory exists
-func CheckDirExists(dir string) error {
+func checkDirExists(dir string) error {
 	if _, err := client.ReadDir(dir); err != nil {
 		if err := client.MkdirAll(dir, 0644); err != nil {
 			return err
