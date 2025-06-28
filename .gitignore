@@ -1,3 +1,4 @@
 dist/
 upload2dav
 *.old
+Makefile
