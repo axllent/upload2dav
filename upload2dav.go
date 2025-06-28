@@ -6,7 +6,7 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/axllent/ghru"
+	"github.com/axllent/ghru/v2"
 	"github.com/spf13/pflag"
 	"github.com/studio-b12/gowebdav"
 )
@@ -19,6 +19,13 @@ var (
 )
 
 func main() {
+	ghruConf := ghru.Config{
+		Repo:           "axllent/upload2dav",
+		ArchiveName:    "upload2dav-{{.OS}}-{{.Arch}}",
+		BinaryName:     "upload2dav",
+		CurrentVersion: version,
+	}
+
 	var showHelp, writeConfig, showVersion, update bool
 	var configFile, uploadPath string
 
@@ -55,21 +62,37 @@ func main() {
 	}
 
 	if showVersion {
-		fmt.Println(fmt.Sprintf("Version: %s", version))
-		latest, _, _, err := ghru.Latest("axllent/upload2dav", "upload2dav")
-		if err == nil && ghru.GreaterThan(latest, version) {
-			fmt.Println(fmt.Sprintf("Update available: %s\nRun `%s -u` to update.", latest, os.Args[0]))
+		fmt.Printf("Version: %s\n", version)
+
+		release, err := ghruConf.Latest()
+		if err != nil {
+			fmt.Println(err.Error())
+			os.Exit(1)
 		}
+
+		// The latest version is the same version
+		if release.Tag == version {
+			os.Exit(0)
+		}
+
+		// A newer release is available
+		fmt.Printf(
+			"Update available: %s\nRun `%s -u` to update (requires read/write access to install directory).\n",
+			release.Tag,
+			os.Args[0],
+		)
 		os.Exit(0)
 	}
 
 	if update {
-		rel, err := ghru.Update("axllent/upload2dav", "upload2dav", version)
+		// Update the app
+		rel, err := ghruConf.SelfUpdate()
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println(err.Error())
 			os.Exit(1)
 		}
-		fmt.Println(fmt.Sprintf("Updated %s to version %s", os.Args[0], rel))
+
+		fmt.Printf("Updated %s to version %s\n", os.Args[0], rel.Tag)
 		os.Exit(0)
 	}
 
