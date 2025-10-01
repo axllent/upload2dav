@@ -7,7 +7,7 @@ toolchain go1.23.4
 require (
 	github.com/axllent/ghru/v2 v2.0.1
 	github.com/howeyc/gopass v0.0.0-20210920133722-c8aef6fb66ef
-	github.com/spf13/pflag v1.0.6
+	github.com/spf13/pflag v1.0.10
 	github.com/studio-b12/gowebdav v0.10.0
 )
 
