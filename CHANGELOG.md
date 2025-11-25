@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.1.2]
+
+- Update Go dependencies
+
 ## [1.1.1]
 
 - Update Go dependencies
